@@ -103,25 +103,6 @@ The annotations are converted into binary segmentation masks before training.
 
 ---
 
-# 📷 Image Prediction
-
-1. Upload an image.
-2. Model predicts lane segmentation.
-3. Overlay is generated.
-4. Download the result.
-
----
-
-# 🎥 Video Prediction
-
-1. Upload a driving video.
-2. Each frame is processed.
-3. Lane overlay is generated.
-4. Processed video is displayed.
-5. Download processed video.
-
----
-
 # 📈 Workflow
 
 ```
