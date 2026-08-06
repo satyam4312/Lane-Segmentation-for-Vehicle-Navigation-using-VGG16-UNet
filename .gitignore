@@ -1,0 +1,46 @@
+@"
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+myenv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VS Code temp files
+.vscode/
+*.code-workspace
+tempCodeRunnerFile.py
+
+# model
+models/
+*.keras
+
+# Logs
+*.log
+
+# Data / cache
+*.csv
+*.tsv
+*.dat
+*.cache
+*.pkl
+
+# Build / distribution
+build/
+dist/
+*.egg-info/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+"@ | Out-File -Encoding utf8 .gitignore
