@@ -178,6 +178,3 @@ This project is licensed under the MIT License.
 
 Machine Learning | Deep Learning | Computer Vision | AI
 
----
-
-## ⭐ If you found this project useful, please consider giving it a star on GitHub!
