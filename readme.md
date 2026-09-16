@@ -20,10 +20,10 @@ Road lane detection is a fundamental task in autonomous driving systems and Adva
 ### Output
 - Binary Lane Mask
 - Lane Overlay on Original Image
-- ![App Screenshot](outputs/screenshot_lane_segmentation.png)
+- ![App Screenshot](outputs/road-lane-segmentation-app.png)
 
 - Processed Video with Lane Segmentation
-- ![Segmentation Demo from App](outputs/lane_segmentation.gif)
+- ![Segmentation Demo from App](outputs/lane_output_web.mp4)
 
 ---
 
