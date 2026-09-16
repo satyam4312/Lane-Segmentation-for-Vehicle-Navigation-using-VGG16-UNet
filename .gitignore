@@ -44,3 +44,7 @@ Thumbs.db
 # Environment variables
 .env
 "@ | Out-File -Encoding utf8 .gitignore
+
+# output and uploads
+uploads/
+outputs/
