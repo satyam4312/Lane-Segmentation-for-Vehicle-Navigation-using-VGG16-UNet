@@ -48,3 +48,4 @@ Thumbs.db
 # folders
 uploads/
 outputs/
+models/best_model.keras
