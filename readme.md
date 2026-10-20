@@ -1,12 +1,6 @@
 # 🛣️ Road Lane Segmentation using VGG16-UNet
-
-An end-to-end Deep Learning application for **Road Lane Segmentation** built using a **VGG16-UNet** architecture and deployed with **Streamlit**. The application allows users to upload **images** or **videos** and generates accurate lane segmentation overlays for autonomous driving and intelligent transportation applications.
-
----
-
-## 📌 Project Overview
-
 Road lane detection is a fundamental task in autonomous driving systems and Advanced Driver Assistance Systems (ADAS). This project performs **semantic segmentation** of road lanes using a pretrained VGG16 encoder integrated with a U-Net decoder.
+This is an end-to-end Deep Learning application for **Road Lane Segmentation** built using a **VGG16-UNet** architecture and deployed with **Streamlit**. The application allows users to upload **images** or **videos** and generates accurate lane segmentation overlays for autonomous driving and intelligent transportation applications.
 
 ---
 
@@ -49,30 +43,6 @@ Road lane detection is a fundamental task in autonomous driving systems and Adva
           Overlay Generation (OpenCV)
                      │
              Display & Download
-```
-
----
-
-# 📂 Project Structure
-
-```
-LaneSegmentation/
-│
-├── app.py                  
-├── model.py                 
-├── image_predict.py            
-├── video_predict.py         
-│
-├── models/
-│      best_model.keras
-│
-├── uploads/
-├── outputs/
-├── notebooks/
-│      road-lane-segmentation-vggunet-tusimple.ipynb
-│
-├── requirements.txt
-└── README.md
 ```
 
 ---
@@ -163,18 +133,3 @@ Display Results
 - Road Infrastructure Monitoring
 - Driver Assistance Systems
 - Intelligent Mobility
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-# 👨‍💻 Author
-
-**Satyam Chaurasiya**
-
-Machine Learning | Deep Learning | Computer Vision | AI
-
