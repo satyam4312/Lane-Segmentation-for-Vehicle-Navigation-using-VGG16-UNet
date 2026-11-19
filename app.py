@@ -177,14 +177,20 @@ def ensure_browser_playable(video_path):
     Re-encode to H.264 + yuv420p with faststart so it previews inline.
     Falls back to the original file if ffmpeg isn't available or fails.
     """
-    if shutil.which("ffmpeg") is None:
-        return video_path
+    ffmpeg_path = shutil.which("ffmpeg")
+    if ffmpeg_path is None:
+        try:
+            import imageio_ffmpeg
+
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            return video_path
 
     web_path = os.path.splitext(video_path)[0] + "_web.mp4"
     try:
         subprocess.run(
             [
-                "ffmpeg", "-y",
+                ffmpeg_path, "-y",
                 "-i", video_path,
                 "-vcodec", "libx264",
                 "-pix_fmt", "yuv420p",

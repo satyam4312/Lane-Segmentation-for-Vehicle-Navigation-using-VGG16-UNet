@@ -1,14 +1,24 @@
 import os
+from pathlib import Path
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
-from tensorflow.keras.models import load_model
+K = tf.keras.backend
+load_model = tf.keras.models.load_model
 
 IMG_SIZE = (224, 224)
-MODEL_PATH = "models/best_model.keras"
+PROJECT_DIR = Path(__file__).resolve().parent
+MODEL_PATH = Path(
+    os.environ.get("MODEL_PATH", PROJECT_DIR / "models" / "best_model.keras")
+)
+
+if not MODEL_PATH.is_file():
+    raise FileNotFoundError(
+        f"Model file not found: {MODEL_PATH}. Set MODEL_URL during the Render "
+        "build or place best_model.keras at models/best_model.keras."
+    )
 
 
 def dice_coef(y_true, y_pred, smooth=1):
@@ -35,4 +45,4 @@ model = load_model(
     compile=False
 )
 
-print("Model loaded successfully!") 
+print("Model loaded successfully!")
