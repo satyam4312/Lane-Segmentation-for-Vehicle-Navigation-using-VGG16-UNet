@@ -1,71 +1,115 @@
-"""Download the trained Keras model during deployment when it is not in Git."""
+"""Fetch and verify the public model object from GitHub LFS."""
 
 import hashlib
+import json
 import os
 from pathlib import Path
-import zipfile
-
-import requests
-
-
-PROJECT_DIR = Path(__file__).resolve().parent
-DEFAULT_MODEL_URL = (
-    "https://media.githubusercontent.com/media/"
-    "satyam4312/Lane-Segmentation-for-Vehicle-Navigation-using-VGG16-UNet/"
-    "main/models/best_model.keras"
-)
-MODEL_PATH = Path(
-    os.environ.get("MODEL_PATH", PROJECT_DIR / "models" / "best_model.keras")
-)
-MODEL_URL = os.environ.get("MODEL_URL", DEFAULT_MODEL_URL).strip()
-EXPECTED_SHA256 = os.environ.get("MODEL_SHA256", "").strip().lower()
+import tempfile
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 
-def main():
-    if MODEL_PATH.is_file() and zipfile.is_zipfile(MODEL_PATH):
-        print(f"Model already exists: {MODEL_PATH}")
-        return
+REPOSITORY = "satyam4312/Lane-Segmentation-for-Vehicle-Navigation-using-VGG16-UNet"
+MODEL_PATH = Path(__file__).resolve().parent / "models" / "best_model.keras"
+LFS_OID = "aeb3cc788950c2611c8824e38bf42545c7fa83d7d0abbfed373ae397dcc92a58"
+MODEL_SIZE = 223_816_349
+LFS_BATCH_URL = f"https://github.com/{REPOSITORY}.git/info/lfs/objects/batch"
 
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as model_file:
+        for chunk in iter(lambda: model_file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def get_download_action():
+    payload = {
+        "operation": "download",
+        "transfers": ["basic"],
+        "ref": {"name": "refs/heads/main"},
+        "objects": [{"oid": LFS_OID, "size": MODEL_SIZE}],
+    }
+    request = Request(
+        LFS_BATCH_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Accept": "application/vnd.git-lfs+json",
+            "Content-Type": "application/vnd.git-lfs+json",
+            "User-Agent": "lane-segmentation-render-build",
+        },
+        method="POST",
+    )
+
+    with urlopen(request, timeout=60) as response:
+        result = json.load(response)
+
+    objects = result.get("objects", [])
+    if not objects:
+        raise RuntimeError(f"Git LFS returned no model object: {result}")
+
+    model_object = objects[0]
+    if "error" in model_object:
+        raise RuntimeError(f"Git LFS model request failed: {model_object['error']}")
+
+    action = model_object.get("actions", {}).get("download")
+    if not action or not action.get("href"):
+        raise RuntimeError("Git LFS did not return a model download URL.")
+    return action
+
+
+def download_model():
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = MODEL_PATH.with_name(MODEL_PATH.name + ".download")
+
+    if MODEL_PATH.is_file() and MODEL_PATH.stat().st_size == MODEL_SIZE:
+        if sha256_file(MODEL_PATH) == LFS_OID:
+            print("Git LFS model is already present and verified.")
+            return
+
+    action = get_download_action()
+    request = Request(
+        action["href"],
+        headers=action.get("header", {}),
+        method="GET",
+    )
+
+    temp_path = None
     digest = hashlib.sha256()
     downloaded = 0
-
     try:
-        with requests.get(MODEL_URL, stream=True, timeout=(30, 180)) as response:
-            response.raise_for_status()
-            with temp_path.open("wb") as output:
-                for chunk in response.iter_content(chunk_size=8 * 1024 * 1024):
+        with urlopen(request, timeout=180) as response:
+            with tempfile.NamedTemporaryFile(
+                mode="wb", dir=MODEL_PATH.parent, delete=False
+            ) as output:
+                temp_path = Path(output.name)
+                while True:
+                    chunk = response.read(8 * 1024 * 1024)
                     if not chunk:
-                        continue
+                        break
                     output.write(chunk)
                     digest.update(chunk)
                     downloaded += len(chunk)
 
-        if downloaded == 0:
-            raise RuntimeError("The model download was empty.")
-
-        actual_sha256 = digest.hexdigest()
-        if EXPECTED_SHA256 and actual_sha256 != EXPECTED_SHA256:
+        actual_oid = digest.hexdigest()
+        if downloaded != MODEL_SIZE:
             raise RuntimeError(
-                "Model SHA-256 mismatch: expected "
-                f"{EXPECTED_SHA256}, received {actual_sha256}."
+                f"Model download size mismatch: expected {MODEL_SIZE}, got {downloaded}."
+            )
+        if actual_oid != LFS_OID:
+            raise RuntimeError(
+                f"Model SHA-256 mismatch: expected {LFS_OID}, got {actual_oid}."
             )
 
-        if not zipfile.is_zipfile(temp_path):
-            raise RuntimeError(
-                "The downloaded file is not a valid .keras archive. Check that "
-                "MODEL_URL points directly to the model asset, not a web page."
-            )
-
-        temp_path.replace(MODEL_PATH)
-        print(
-            f"Downloaded model ({downloaded:,} bytes) to {MODEL_PATH}; "
-            f"SHA-256: {actual_sha256}"
-        )
+        os.replace(temp_path, MODEL_PATH)
+        temp_path = None
+        print(f"Downloaded and verified Git LFS model ({downloaded:,} bytes).")
+    except (HTTPError, URLError, TimeoutError) as error:
+        raise RuntimeError(f"Could not download the model from GitHub LFS: {error}") from error
     finally:
-        temp_path.unlink(missing_ok=True)
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
-    main()
+    download_model()

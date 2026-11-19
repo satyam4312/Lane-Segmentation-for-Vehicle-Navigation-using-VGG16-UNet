@@ -36,7 +36,7 @@ On Windows PowerShell, activate the environment with `.\.venv\Scripts\Activate.p
 ## Deploy on Render
 
 1. Create a Render **Blueprint** from this GitHub repository.
-2. Deploy using [`render.yaml`](render.yaml). The build installs dependencies and checks the model. If Render checked out only the LFS pointer, `download_model.py` fetches the actual LFS object.
+2. Deploy using [`render.yaml`](render.yaml). Python is pinned to 3.13.5 in `.python-version`. The build fetches and verifies the model from GitHub's LFS batch API, then installs dependencies.
 
 The Blueprint uses Render's Standard plan (1 CPU, 2 GB RAM); TensorFlow may exceed the free plan's 512 MB RAM. See [Render pricing](https://render.com/pricing). A fresh build may download the 224 MB model again, using GitHub LFS bandwidth.
 
@@ -49,6 +49,7 @@ download_model.py      Ensures the full LFS model is available during build
 image_predict.py       Image preprocessing and prediction
 video_predict.py       Frame-by-frame video processing
 render.yaml            Render Blueprint configuration
+.python-version        Render Python version pin
 notebook/              TuSimple training notebook
 requirements.txt       Python dependencies
 ```

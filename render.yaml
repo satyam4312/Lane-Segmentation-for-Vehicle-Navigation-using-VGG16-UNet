@@ -3,5 +3,5 @@ services:
     name: road-lane-segmentation
     runtime: python
     plan: standard
-    buildCommand: python -m pip install -r requirements.txt && python download_model.py
+    buildCommand: python download_model.py && python -m pip install -r requirements.txt
     startCommand: streamlit run app.py --server.address 0.0.0.0 --server.port $PORT
