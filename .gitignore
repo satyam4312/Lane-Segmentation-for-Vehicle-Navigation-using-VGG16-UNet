@@ -18,9 +18,8 @@ myenv/
 tempCodeRunnerFile.py
 
 # Keep only the deployed model; store it with Git LFS
-models/*
-!models/best_model.keras
 *.keras
+models/*
 !models/best_model.keras
 
 # Logs and generated data
