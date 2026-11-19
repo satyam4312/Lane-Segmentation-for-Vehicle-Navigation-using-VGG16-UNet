@@ -1,5 +1,4 @@
-@"
-# Byte-compiled / optimized / DLL files
+# Python bytecode
 __pycache__/
 *.py[cod]
 *.pyo
@@ -10,42 +9,36 @@ venv/
 env/
 myenv/
 
-# Jupyter Notebook checkpoints
+# Jupyter
 .ipynb_checkpoints/
 
-# VS Code temp files
+# Editor files
 .vscode/
 *.code-workspace
 tempCodeRunnerFile.py
 
-# model
-models/
+# Keep only the deployed model; store it with Git LFS
+models/*
+!models/best_model.keras
 *.keras
+!models/best_model.keras
 
-# Logs
+# Logs and generated data
 *.log
-
-# Data / cache
 *.csv
 *.tsv
 *.dat
 *.cache
 *.pkl
+uploads/
+outputs/
 
-# Build / distribution
+# Build artifacts
 build/
 dist/
 *.egg-info/
 
-# OS-specific files
+# OS and local environment files
 .DS_Store
 Thumbs.db
-
-# Environment variables
 .env
-"@ | Out-File -Encoding utf8 .gitignore
-
-# folders
-uploads/
-outputs/
-models/best_model.keras

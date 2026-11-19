@@ -5,8 +5,3 @@ services:
     plan: standard
     buildCommand: python -m pip install -r requirements.txt && python download_model.py
     startCommand: streamlit run app.py --server.address 0.0.0.0 --server.port $PORT
-    envVars:
-      - key: MODEL_URL
-        sync: false
-      - key: MODEL_SHA256
-        sync: false

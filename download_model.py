@@ -9,23 +9,22 @@ import requests
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
+DEFAULT_MODEL_URL = (
+    "https://media.githubusercontent.com/media/"
+    "satyam4312/Lane-Segmentation-for-Vehicle-Navigation-using-VGG16-UNet/"
+    "main/models/best_model.keras"
+)
 MODEL_PATH = Path(
     os.environ.get("MODEL_PATH", PROJECT_DIR / "models" / "best_model.keras")
 )
-MODEL_URL = os.environ.get("MODEL_URL", "").strip()
+MODEL_URL = os.environ.get("MODEL_URL", DEFAULT_MODEL_URL).strip()
 EXPECTED_SHA256 = os.environ.get("MODEL_SHA256", "").strip().lower()
 
 
 def main():
-    if MODEL_PATH.is_file():
+    if MODEL_PATH.is_file() and zipfile.is_zipfile(MODEL_PATH):
         print(f"Model already exists: {MODEL_PATH}")
         return
-
-    if not MODEL_URL:
-        raise SystemExit(
-            "MODEL_URL is not set and the model file is missing. Set MODEL_URL "
-            "to a direct download URL for best_model.keras."
-        )
 
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     temp_path = MODEL_PATH.with_name(MODEL_PATH.name + ".download")
