@@ -21,6 +21,21 @@
 
 The app resizes each frame to 224 × 224 pixels, scales RGB values to `[0, 1]`, and runs the model. Predictions above `0.5` become lane pixels. The mask is resized to the input dimensions and blended with the original image. Video uses the same process one frame at a time.
 
+## Where lane segmentation can help
+
+Lane-marking segmentation turns road images into a visual mask that is easier to inspect and use in computer-vision experiments. Similar tools can support:
+
+- **Driver-assistance and autonomous-driving research:** prototype lane-awareness pipelines and review model predictions on road scenes.
+- **Fleet and logistics teams:** analyze sampled dashcam footage to understand lane visibility along routes.
+- **Smart-city and road-maintenance teams:** explore camera-based surveys for finding locations where lane markings may need inspection or repainting.
+- **Education and prototyping:** teach image segmentation and compare model outputs without building a full perception stack.
+
+These are potential applications of the technique. This project is a visual demo; it does not control vehicles, certify road conditions, or replace safety-critical validation.
+
+## Future directions
+
+Possible next steps include evaluating on more regions and weather conditions, improving consistency across adjacent video frames, measuring accuracy with standard segmentation metrics, and optimizing inference for edge devices. A batch workflow or API could also help teams integrate predictions into larger road-review tools.
+
 ## Run locally
 
 Python 3.13 and Git LFS are recommended. From a terminal:
