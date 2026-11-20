@@ -18,6 +18,10 @@ Inputs are resized to 224 x 224 and normalized to `[0, 1]`. Model predictions ab
 
 `models/best_model.keras` is stored with **Git LFS**. Git tracks a small pointer; Git LFS stores the 224 MB model file. `.gitattributes` configures LFS for this model. GitHub Free includes 10 GiB of LFS storage and 10 GiB of monthly download bandwidth ([GitHub LFS quotas](https://docs.github.com/en/billing/concepts/product-billing/git-lfs)).
 
+## License
+
+The original project source code is licensed under the MIT License; see [`LICENSE`](LICENSE). The trained model and sample media are excluded because they are derived from or may contain material associated with the TuSimple dataset, whose reuse terms should be confirmed separately before relicensing those artifacts.
+
 ## Run locally
 
 Install Git LFS, then from the project directory run:
@@ -46,7 +50,6 @@ The app loads TensorFlow and processes videos, so deployment may be limited by C
 ```text
 app.py                 Streamlit interface
 model.py               Loads the Keras model
-download_model.py      Downloads and verifies the model from Git LFS when needed
 image_predict.py       Image preprocessing and prediction
 video_predict.py       Frame-by-frame video processing
 notebook/              TuSimple training notebook
