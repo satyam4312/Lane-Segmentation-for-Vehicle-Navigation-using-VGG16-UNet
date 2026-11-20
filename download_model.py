@@ -37,7 +37,7 @@ def get_download_action():
         headers={
             "Accept": "application/vnd.git-lfs+json",
             "Content-Type": "application/vnd.git-lfs+json",
-            "User-Agent": "lane-segmentation-render-build",
+            "User-Agent": "lane-segmentation-model-downloader",
         },
         method="POST",
     )

@@ -16,8 +16,8 @@ MODEL_PATH = Path(
 
 if not MODEL_PATH.is_file():
     raise FileNotFoundError(
-        f"Model file not found: {MODEL_PATH}. Set MODEL_URL during the Render "
-        "build or place best_model.keras at models/best_model.keras."
+        f"Model file not found: {MODEL_PATH}. Run download_model.py or place "
+        "best_model.keras at models/best_model.keras."
     )
 
 

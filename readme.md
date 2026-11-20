@@ -16,7 +16,7 @@ Inputs are resized to 224 x 224 and normalized to `[0, 1]`. Model predictions ab
 
 ## Model storage
 
-`models/best_model.keras` is stored with **Git LFS**. Git tracks a small pointer; Git LFS stores the 224 MB model file. `.gitattributes` configures LFS for this model. GitHub Free includes 10 GiB of LFS storage and 10 GiB of monthly download bandwidth; clones and Render builds use that bandwidth ([GitHub LFS quotas](https://docs.github.com/en/billing/concepts/product-billing/git-lfs)).
+`models/best_model.keras` is stored with **Git LFS**. Git tracks a small pointer; Git LFS stores the 224 MB model file. `.gitattributes` configures LFS for this model. GitHub Free includes 10 GiB of LFS storage and 10 GiB of monthly download bandwidth ([GitHub LFS quotas](https://docs.github.com/en/billing/concepts/product-billing/git-lfs)).
 
 ## Run locally
 
@@ -33,23 +33,22 @@ streamlit run app.py
 
 On Windows PowerShell, activate the environment with `.\.venv\Scripts\Activate.ps1` instead of `source .venv/bin/activate`.
 
-## Deploy on Render
+## Deploy on Streamlit Community Cloud
 
-1. Create a Render **Blueprint** from this GitHub repository.
-2. Deploy using [`render.yaml`](render.yaml). Python is pinned to 3.13.5 in `.python-version`. The build fetches and verifies the model from GitHub's LFS batch API, then installs dependencies.
+1. Push this repository to GitHub, including the Git LFS model.
+2. In [Streamlit Community Cloud](https://share.streamlit.io/), create an app from the repository and select `app.py` as the entrypoint.
+3. Choose Python 3.13 in the app's advanced settings. Community Cloud supports Git LFS files, so the model is available to the app after checkout.
 
-The Blueprint uses Render's Standard plan (1 CPU, 2 GB RAM); TensorFlow may exceed the free plan's 512 MB RAM. See [Render pricing](https://render.com/pricing). A fresh build may download the 224 MB model again, using GitHub LFS bandwidth.
+The app loads TensorFlow and processes videos, so deployment may be limited by Community Cloud's available memory and CPU resources.
 
 ## Project files
 
 ```text
 app.py                 Streamlit interface
 model.py               Loads the Keras model
-download_model.py      Ensures the full LFS model is available during build
+download_model.py      Downloads and verifies the model from Git LFS when needed
 image_predict.py       Image preprocessing and prediction
 video_predict.py       Frame-by-frame video processing
-render.yaml            Render Blueprint configuration
-.python-version        Render Python version pin
 notebook/              TuSimple training notebook
 requirements.txt       Python dependencies
 ```
