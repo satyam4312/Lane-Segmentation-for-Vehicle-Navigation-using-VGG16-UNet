@@ -175,7 +175,9 @@ def ensure_browser_playable(video_path):
     OpenCV's VideoWriter commonly outputs mp4v/other codecs that HTML5
     <video> tags can't decode (the player loads but shows 0:00 / no frames).
     Re-encode to H.264 + yuv420p with faststart so it previews inline.
-    Falls back to the original file if ffmpeg isn't available or fails.
+    Raises an error if a browser-compatible file cannot be created. Returning
+    the original OpenCV file here can produce a blank browser preview because
+    its mp4v codec is not supported by many browsers.
     """
     ffmpeg_path = shutil.which("ffmpeg")
     if ffmpeg_path is None:
@@ -183,17 +185,21 @@ def ensure_browser_playable(video_path):
             import imageio_ffmpeg
 
             ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
-        except Exception:
-            return video_path
+        except Exception as exc:
+            raise RuntimeError(
+                "FFmpeg is unavailable, so the video cannot be prepared for browser playback."
+            ) from exc
 
     web_path = os.path.splitext(video_path)[0] + "_web.mp4"
     try:
         subprocess.run(
             [
-                ffmpeg_path, "-y",
+                ffmpeg_path, "-y", "-hide_banner", "-loglevel", "error",
                 "-i", video_path,
-                "-vcodec", "libx264",
-                "-pix_fmt", "yuv420p",
+                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
+                "-c:v", "libx264",
+                "-profile:v", "baseline",
+                "-preset", "fast",
                 "-movflags", "+faststart",
                 "-an",
                 web_path
@@ -201,9 +207,18 @@ def ensure_browser_playable(video_path):
             check=True,
             capture_output=True
         )
+        if not os.path.isfile(web_path) or os.path.getsize(web_path) == 0:
+            raise RuntimeError("FFmpeg did not produce a playable video file.")
         return web_path
-    except Exception:
-        return video_path
+    except Exception as exc:
+        detail = getattr(exc, "stderr", b"")
+        if isinstance(detail, bytes):
+            detail = detail.decode("utf-8", errors="replace")
+        detail = detail.strip()
+        message = "FFmpeg could not create a browser-compatible video."
+        if detail:
+            message = f"{message} {detail[-1200:]}"
+        raise RuntimeError(message) from exc
 
 
 # --------------------------------------------
@@ -425,7 +440,12 @@ with video_tab:
             process_video(file_path, output_video, update_progress)
 
             status_text.caption("Optimizing video for playback...")
-            playable_video = ensure_browser_playable(output_video)
+            try:
+                playable_video = ensure_browser_playable(output_video)
+                preview_error = None
+            except RuntimeError as exc:
+                playable_video = output_video
+                preview_error = str(exc)
             elapsed = time.time() - start_time
 
             progress_bar.empty()
@@ -436,10 +456,11 @@ with video_tab:
             st.session_state["video_output"] = playable_video
             st.session_state["video_download"] = output_video
             st.session_state["video_elapsed"] = elapsed
+            st.session_state["video_preview_error"] = preview_error
             st.balloons()
 
-        output_video = st.session_state["video_output"]
-        download_video = st.session_state.get("video_download", output_video)
+        preview_video = st.session_state["video_output"]
+        download_video = st.session_state.get("video_download", preview_video)
         elapsed = st.session_state["video_elapsed"]
 
         st.markdown(
@@ -449,9 +470,9 @@ with video_tab:
 
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.markdown('<div class="img-label">Result Preview</div>', unsafe_allow_html=True)
-        with open(output_video, "rb") as f:
-            video_bytes = f.read()
-        st.video(video_bytes, autoplay=autoplay, loop=loop_video, muted=muted)
+        if st.session_state.get("video_preview_error"):
+            st.warning(st.session_state["video_preview_error"])
+        st.video(preview_video, format="video/mp4", autoplay=autoplay, loop=loop_video, muted=muted)
         st.markdown('</div>', unsafe_allow_html=True)
 
         d1, d2 = st.columns(2)
@@ -465,7 +486,7 @@ with video_tab:
                 )
         with d2:
             if st.button("🔄 Process Another Video"):
-                for k in ("video_file_id", "video_output", "video_download", "video_elapsed"):
+                for k in ("video_file_id", "video_output", "video_download", "video_elapsed", "video_preview_error"):
                     st.session_state.pop(k, None)
                 st.rerun()
 
