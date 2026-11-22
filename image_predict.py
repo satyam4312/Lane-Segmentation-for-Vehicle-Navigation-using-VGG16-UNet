@@ -41,20 +41,20 @@ def preprocess_image(image_path):
 # -----------------------------------------
 # Predict segmentation mask
 # -----------------------------------------
-def predict_mask(image_tensor):
+def predict_masks(image_batch):
+    """Predict binary masks for a batch of preprocessed RGB images."""
+    prediction = model.predict(image_batch, verbose=0)
 
-    prediction = model.predict(image_tensor, verbose=0)
-
-    prediction = prediction[0]
-
-    # Remove channel dimension if present
+    # Remove the model's single-channel axis when present.
     if prediction.shape[-1] == 1:
         prediction = np.squeeze(prediction, axis=-1)
 
-    # Binary mask
-    mask = (prediction > 0.5).astype(np.uint8)
+    return (prediction > 0.5).astype(np.uint8)
 
-    return mask
+
+def predict_mask(image_tensor):
+    """Predict a binary mask for one image tensor."""
+    return predict_masks(image_tensor)[0]
 
 
 # -----------------------------------------
