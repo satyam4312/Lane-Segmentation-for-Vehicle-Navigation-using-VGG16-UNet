@@ -425,7 +425,10 @@ with video_tab:
                 f.write(uploaded_video.getbuffer())
 
             st.markdown('<div class="section-card">', unsafe_allow_html=True)
-            st.info("⏳ Processing video... this may take a moment depending on length.")
+            st.info(
+                "Processing video with CPU-saving frame sampling. "
+                "Long videos may take a while; playback speed is preserved."
+            )
 
             progress_bar = st.progress(0)
             status_text = st.empty()
