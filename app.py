@@ -416,9 +416,26 @@ with video_tab:
     loop_video = playback_col2.checkbox("Loop", value=False)
     muted = playback_col3.checkbox("Muted", value=True)
 
+    speed_col1, speed_col2 = st.columns(2)
+    batch_size = speed_col1.selectbox(
+        "Inference batch size",
+        options=[1, 4, 8, 16],
+        index=2,
+        help="Larger batches may improve throughput, especially with a GPU, but use more memory.",
+    )
+    inference_interval = speed_col2.selectbox(
+        "Run inference every N frames",
+        options=[1, 2, 3, 5],
+        index=0,
+        help="Higher values are faster. The previous lane mask is reused between inference frames.",
+    )
+
     if uploaded_video is not None:
 
-        video_file_id = f"{uploaded_video.name}-{uploaded_video.size}"
+        video_file_id = (
+            f"{uploaded_video.name}-{uploaded_video.size}"
+            f"-batch{batch_size}-interval{inference_interval}"
+        )
 
         if st.session_state.get("video_file_id") != video_file_id:
             file_path = os.path.join("uploads", uploaded_video.name)
@@ -438,7 +455,13 @@ with video_tab:
             output_video = os.path.join("outputs", "lane_output.mp4")
 
             start_time = time.time()
-            process_video(file_path, output_video, update_progress)
+            process_video(
+                file_path,
+                output_video,
+                update_progress,
+                batch_size=batch_size,
+                inference_interval=inference_interval,
+            )
 
             status_text.caption("Optimizing video for playback...")
             try:
@@ -502,3 +525,4 @@ with video_tab:
             """,
             unsafe_allow_html=True
         )
+

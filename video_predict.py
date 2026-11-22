@@ -5,15 +5,24 @@ from image_predict import predict_masks, resize_mask, create_overlay
 
 os.makedirs("outputs", exist_ok = True)
 
-# Batch inference reduces the per-call overhead while preserving predictions
-# for every source frame. Four frames keeps temporary memory use moderate.
-VIDEO_INFERENCE_BATCH_SIZE = 4
-
-
-def process_video(input_video_path, output_video_path, progress_callback = None):
+def process_video(
+    input_video_path,
+    output_video_path,
+    progress_callback=None,
+    batch_size=8,
+    inference_interval=1,
+):
     """
-    Process a video frame by frame and save the output video.
+    Process a video and save its lane overlay.
+
+    ``batch_size`` controls how many sampled frames are sent to the model in
+    one call. ``inference_interval`` runs inference once every N frames and
+    reuses each mask for the frames until the next inference frame.
     """
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1")
+    if inference_interval < 1:
+        raise ValueError("inference_interval must be at least 1")
 
     cap = cv2.VideoCapture(input_video_path)
 
@@ -37,25 +46,38 @@ def process_video(input_video_path, output_video_path, progress_callback = None)
     )
 
     frame_number = 0
-    pending_frames = []
+    source_frame_number = 0
+    pending_groups = []
     pending_inputs = []
+    current_group = []
 
     def write_batch():
         nonlocal frame_number
         masks = predict_masks(np.stack(pending_inputs, axis=0))
 
-        for rgb, mask in zip(pending_frames, masks):
-            frame_height, frame_width = rgb.shape[:2]
-            mask = resize_mask(mask, frame_width, frame_height)
-            _, overlay = create_overlay(rgb, mask)
-            writer.write(cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
+        for group, mask in zip(pending_groups, masks):
+            for rgb in group:
+                frame_height, frame_width = rgb.shape[:2]
+                frame_mask = resize_mask(mask, frame_width, frame_height)
+                _, overlay = create_overlay(rgb, frame_mask)
+                writer.write(cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
 
-            frame_number += 1
-            if progress_callback is not None and total_frames > 0:
-                progress_callback(min(frame_number / total_frames, 1.0))
+                frame_number += 1
+                if progress_callback is not None and total_frames > 0:
+                    progress_callback(min(frame_number / total_frames, 1.0))
 
-        pending_frames.clear()
+        pending_groups.clear()
         pending_inputs.clear()
+
+    def finalize_current_group():
+        if not current_group:
+            return
+        pending_groups.append(current_group.copy())
+        resized = cv2.resize(current_group[0], (224, 224)).astype(np.float32) / 255.0
+        pending_inputs.append(resized)
+        current_group.clear()
+        if len(pending_inputs) >= batch_size:
+            write_batch()
 
     while True:
         ret, frame = cap.read()
@@ -63,14 +85,13 @@ def process_video(input_video_path, output_video_path, progress_callback = None)
             break
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        resized = cv2.resize(rgb, (224, 224)).astype(np.float32) / 255.0
-        pending_frames.append(rgb)
-        pending_inputs.append(resized)
-
-        if len(pending_inputs) >= VIDEO_INFERENCE_BATCH_SIZE:
-            write_batch()
+        if source_frame_number % inference_interval == 0:
+            finalize_current_group()
+        current_group.append(rgb)
+        source_frame_number += 1
 
     # Process the final partial batch so no source frames are dropped.
+    finalize_current_group()
     if pending_inputs:
         write_batch()
 
@@ -78,4 +99,5 @@ def process_video(input_video_path, output_video_path, progress_callback = None)
     writer.release()
 
     return output_video_path
+
 
