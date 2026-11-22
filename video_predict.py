@@ -5,12 +5,16 @@ from image_predict import predict_masks, resize_mask, create_overlay
 
 os.makedirs("outputs", exist_ok = True)
 
+# Keep inference tuning internal so the video tab stays simple.
+VIDEO_INFERENCE_BATCH_SIZE = 8
+VIDEO_INFERENCE_INTERVAL = 1
+
 def process_video(
     input_video_path,
     output_video_path,
     progress_callback=None,
-    batch_size=8,
-    inference_interval=1,
+    batch_size=VIDEO_INFERENCE_BATCH_SIZE,
+    inference_interval=VIDEO_INFERENCE_INTERVAL,
 ):
     """
     Process a video and save its lane overlay.
