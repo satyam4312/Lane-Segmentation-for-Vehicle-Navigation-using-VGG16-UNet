@@ -406,8 +406,9 @@ with video_tab:
     uploaded_video = st.file_uploader(
         "Choose a Video",
         type=["mp4", "avi", "mov"],
-        help="Drag and drop or browse for a video to run lane segmentation on.",
-        key="video_uploader"
+        help="Upload a video up to 20 MB. Shorter, lower-resolution clips process more reliably.",
+        key="video_uploader",
+        max_upload_size=20
     )
 
     playback_col1, playback_col2, playback_col3 = st.columns(3)
@@ -425,10 +426,7 @@ with video_tab:
                 f.write(uploaded_video.getbuffer())
 
             st.markdown('<div class="section-card">', unsafe_allow_html=True)
-            st.info(
-                "Processing video with CPU-saving frame sampling. "
-                "Long videos may take a while; playback speed is preserved."
-            )
+            st.info("⏳ Processing video... this may take a moment depending on length.")
 
             progress_bar = st.progress(0)
             status_text = st.empty()
